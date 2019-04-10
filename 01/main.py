@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np
 
 threshold = 0.7
+componentes = 0
 
 
 def main():
@@ -9,7 +10,9 @@ def main():
 
     img_bin = img
 
-    show_img("oie", binariza(img, img_bin, threshold))
+    show_img("Binarizada", binariza(img, img_bin, threshold))
+
+    print("Quantidade de arroz: ", rotula(img_bin, 0, 0, 0.1))
 
 
 def show_img(title, img):
@@ -35,12 +38,13 @@ def binariza(img_in, img_out, threshold):
 
         cv.imwrite('binarizada.bmp', img_out)
 
-        return img_out;
+        return img_out
 
 
 def rotula(img, x, y, label):
-
+    
     if img[x][y] == 1.0:
+        componentes += 1
         img[x][y] = label
         label += 0.2
 
@@ -52,6 +56,8 @@ def rotula(img, x, y, label):
             rotula(img, x, y - 1, label)
         if y < len(img) - 1:
             rotula(img, x, y + 1, label)
+    
+    return componentes
 
 
 if __name__ == '__main__': main()
