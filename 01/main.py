@@ -2,17 +2,24 @@ import cv2 as cv
 import numpy as np
 
 threshold = 0.7
-componentes = 0
 
 
 def main():
     img = cv.imread('arroz.bmp', cv.IMREAD_GRAYSCALE)
 
-    img_bin = img
+    # oldColor = 1;
+    #
+    # newColor = oldColor ? 0: 1;
 
-    show_img("Binarizada", binariza(img, img_bin, threshold))
+    # rotula(2, img, 0, 0)
 
-    print("Quantidade de arroz: ", rotula(img_bin, 0, 0, 0.1))
+    img_out = img
+
+    img_bin = binariza(img, img_out, threshold)
+
+    show_img("Binarizada", img_bin)
+
+    # print("Quantidade de arroz: ", rotula(img_bin, 0, 0, 0.1))
 
 
 def show_img(title, img):
@@ -21,7 +28,7 @@ def show_img(title, img):
     cv.destroyAllWindows()
 
 
-def binariza(img_in, img_out, threshold):
+def binariza (img_in, img_out, threshold):
     if img_in.shape != img_out.shape:
         print("ERRO: binariza: as imagens precisam ter o mesmo tamanho e numero de canais.")
     else:
@@ -41,23 +48,34 @@ def binariza(img_in, img_out, threshold):
         return img_out
 
 
-def rotula(img, x, y, label):
-    
-    if img[x][y] == 1.0:
-        componentes += 1
-        img[x][y] = label
-        label += 0.2
+# def floodFill(i, j):
+#
+#     if ( 0 <= i and i < height and   0 <= j and j < width and  bitmap[i][j] == oldColor )
+#     {
+#         bitmap[i][j] = newColor;
+#         floodFill(i-1,j);
+#         floodFill(i+1,j);
+#         floodFill(i,j-1);
+#         floodFill(i,j+1);
+#     }
+# }
 
-        if x > 0:
-            rotula(img, x - 1, y, label)
-        if x < len(img[y]) - 1:
-            rotula(img, x + 1, y, label)
-        if y > 0:
-            rotula(img, x, y - 1, label)
-        if y < len(img) - 1:
-            rotula(img, x, y + 1, label)
-    
-    return componentes
+def floodfill (label, img, x0, y0):
 
+    if (img[x0][y0] == 1) or (x0 < 0 and y0 < 0):
+        return
+
+    img[x0:y0] = label
+
+    floodfill(label, img, x0 + 1, y0)
+    floodfill(label, img, x0 - 1, y0)
+    floodfill(label, img, x0, y0 + 1)
+    floodfill(label, img, x0, y0 - 1)
+
+    return img
+
+
+def rotula (img, componentes, largura_min, altura_min, n_pixels_min):
+    pass
 
 if __name__ == '__main__': main()
