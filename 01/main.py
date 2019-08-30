@@ -1,10 +1,13 @@
 import cv2 as cv
+import sys
 import numpy as np
 
 threshold = 0.7
 
 
 def main():
+    sys.setrecursionlimit(650000)
+
     img = cv.imread('arroz.bmp', cv.IMREAD_GRAYSCALE)
 
     # oldColor = 1;
@@ -17,9 +20,14 @@ def main():
 
     img_bin = binariza(img, img_out, threshold)
 
-    show_img("Binarizada", img_bin)
+    # for i in range(img_out.shape[0]):
+    #     for j in range(img_out.shape[1]):
+    #         if img_bin[i][j] != 0.0:
+    #             print(img_bin[i][j])
 
-    # print("Quantidade de arroz: ", rotula(img_bin, 0, 0, 0.1))
+    # show_img("Binarizada", img_bin)
+
+    print("Quantidade de arroz: ", rotula(img_bin, 20, 30, 60))
 
 
 def show_img(title, img):
@@ -28,54 +36,107 @@ def show_img(title, img):
     cv.destroyAllWindows()
 
 
-def binariza (img_in, img_out, threshold):
+def binariza(img_in, img_out, threshold):
     if img_in.shape != img_out.shape:
         print("ERRO: binariza: as imagens precisam ter o mesmo tamanho e numero de canais.")
     else:
         img_out = cv.normalize(img_in.astype('float'), None, 0.0, 1.0, cv.NORM_MINMAX)
 
-        for i in range(len(img_out)):
-            for j in range(len(img_out[i])):
+        for i in range(img_out.shape[0]):
+            for j in range(img_out.shape[1]):
                 if img_out[i][j] > threshold:
-                    img_out[i][j] = 1.0
+                    img_out[i][j] = -1.0
                 else:
                     img_out[i][j] = 0
-
-        img_out = img_out * 255
-
-        cv.imwrite('binarizada.bmp', img_out)
 
         return img_out
 
 
-# def floodFill(i, j):
-#
-#     if ( 0 <= i and i < height and   0 <= j and j < width and  bitmap[i][j] == oldColor )
-#     {
-#         bitmap[i][j] = newColor;
-#         floodFill(i-1,j);
-#         floodFill(i+1,j);
-#         floodFill(i,j-1);
-#         floodFill(i,j+1);
-#     }
-# }
+def floodfill(label, img, x0, y0):
 
-def floodfill (label, img, x0, y0):
-
-    if (img[x0][y0] == 1) or (x0 < 0 and y0 < 0):
+    if x0 < 0 or y0 < 0:
         return
 
-    img[x0:y0] = label
+    if x0 >= img.shape[0]-1 or y0 >= img.shape[1]-1:
+        return
+
+    if img[x0][y0] == label:
+        return
+
+    if img[x0][y0] == 0:
+        return
+
+    img[x0][y0] = label
 
     floodfill(label, img, x0 + 1, y0)
     floodfill(label, img, x0 - 1, y0)
     floodfill(label, img, x0, y0 + 1)
     floodfill(label, img, x0, y0 - 1)
 
-    return img
+    return
 
 
-def rotula (img, componentes, largura_min, altura_min, n_pixels_min):
-    pass
+def defineComponents(img, component, x0, y0):
+    if x0 < 0 or y0 < 0:
+        return
+
+    if x0 >= img.shape[0]-1 or y0 >= img.shape[1]-1:
+        return
+
+    if img[x0][y0] == 0:
+        return
+
+    if x0 > component['x0']:
+        component['x'] = x0
+
+    if x0 > component['y0']:
+        component['y'] = y0
+
+    component['qtd_pixels'] += 1
+
+    defineComponents(img, component, x0 + 1, y0)
+    defineComponents(img, component, x0 - 1, y0)
+    defineComponents(img, component, x0, y0 + 1)
+    defineComponents(img, component, x0, y0 - 1)
+
+    return component
+
+
+def rotula(img, largura_min, altura_min, n_pixels_min):
+
+    label = 1
+
+    componentsList = []
+
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            if img[i][j] == -1.0:
+                floodfill(label, img, i, j)
+                label += 1
+
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            if img[i][j] >= 1:
+                new_component = {'label': img[i][j], 'x0': i, 'y0': j, 'x': i, 'y': j, 'qtd_pixels': 0}
+
+                new_component = defineComponents(img, new_component, i, j)
+
+                componentsList.append(new_component)
+
+    for component in componentsList:
+        if (component['x'] - component['x0']) < altura_min:
+            componentsList.remove(component)
+            continue
+
+        if (component['y'] - component['y0']) < largura_min:
+            componentsList.remove(component)
+            continue
+
+        if component['qtd_pixels'] < n_pixels_min:
+            componentsList.remove(component)
+            continue
+
+    return len(componentsList)
+
 
 if __name__ == '__main__': main()
