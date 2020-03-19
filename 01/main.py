@@ -17,9 +17,9 @@ INPUT_IMAGE = 'arroz.bmp'
 # TODO: ajuste estes parâmetros!
 NEGATIVO = False
 THRESHOLD = 0.7
-ALTURA_MIN = 1
-LARGURA_MIN = 1
-N_PIXELS_MIN = 1
+ALTURA_MIN = 22
+LARGURA_MIN = 31
+N_PIXELS_MIN = 450
 
 
 # ===============================================================================
@@ -40,13 +40,14 @@ Valor de retorno: versão binarizada da img_in.'''
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
             if img[i][j] > threshold:
-                img[i][j] = -1.0
+                img[i][j] = 1.0
             else:
                 img[i][j] = 0
 
     return img
 
 # -------------------------------------------------------------------------------
+
 
 def rotula(img, largura_min, altura_min, n_pixels_min):
     '''Rotulagem usando flood fill. Marca os objetos da imagem com os valores
@@ -68,39 +69,56 @@ respectivamente: topo, esquerda, baixo e direita.'''
     # TODO: escreva esta função.
     # Use a abordagem com flood fill recursivo.
 
-    label = 1
+    label = 2
 
-    componentsList = []
+    components_list = []
 
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
-            if img[i][j] == -1.0:
+            if img[i][j] == 1.0:
                 floodfill(label, img, i, j)
                 label += 1
 
+    components_list = define_components(img, components_list)
+
+    return components_list
+
+
+def define_components(img, components_list):
+
+    components_dict = {}
+
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
-            if img[i][j] >= 1:
-                new_component = {'label': img[i][j], 'x0': i, 'y0': j, 'x': i, 'y': j, 'qtd_pixels': 0}
+            if img[i][j] >= 2:
 
-                new_component = defineComponents(img, new_component, i, j)
+                key = str(img[i][j][0])
+                component = {'label': key, 'n_pixels': 1, 'T': i, 'L': j, 'B': i, 'R': j}
 
-                componentsList.append(new_component)
+                if components_dict.get(key):
 
-    for component in componentsList:
-        if (component['x'] - component['x0']) < altura_min:
-            componentsList.remove(component)
-            continue
+                    components_dict[key]['n_pixels'] = components_dict[key]['n_pixels'] + 1
 
-        if (component['y'] - component['y0']) < largura_min:
-            componentsList.remove(component)
-            continue
+                    if components_dict[key]['T'] < i:
+                        components_dict[key]['T'] = i
 
-        if component['qtd_pixels'] < n_pixels_min:
-            componentsList.remove(component)
-            continue
+                    if components_dict[key]['L'] > j:
+                        components_dict[key]['L'] = j
 
-    return len(componentsList)
+                    if components_dict[key]['B'] > i:
+                        components_dict[key]['B'] = i
+
+                    if components_dict[key]['R'] < j:
+                        components_dict[key]['R'] = j
+
+                else:
+                    components_dict[key] = component
+
+    for key in components_dict:
+        if components_dict[key]['n_pixels'] > N_PIXELS_MIN:
+            components_list.append(components_dict[key])
+
+    return components_list
 
 
 def floodfill(label, img, x0, y0):
@@ -126,31 +144,6 @@ def floodfill(label, img, x0, y0):
 
     return
 
-
-def defineComponents(img, component, x0, y0):
-    if x0 < 0 or y0 < 0:
-        return
-
-    if x0 >= img.shape[0]-1 or y0 >= img.shape[1]-1:
-        return
-
-    if img[x0][y0] == 0:
-        return
-
-    if x0 > component['x0']:
-        component['x'] = x0
-
-    if x0 > component['y0']:
-        component['y'] = y0
-
-    component['qtd_pixels'] += 1
-
-    defineComponents(img, component, x0 + 1, y0)
-    defineComponents(img, component, x0 - 1, y0)
-    defineComponents(img, component, x0, y0 + 1)
-    defineComponents(img, component, x0, y0 - 1)
-
-    return component
 # ===============================================================================
 
 def main():
@@ -176,14 +169,14 @@ def main():
     cv2.imwrite('01 - binarizada.png', img * 255)
 
     start_time = timeit.default_timer()
-    # componentes = rotula(img, LARGURA_MIN, ALTURA_MIN, N_PIXELS_MIN)
-    # n_componentes = len(componentes)
+    componentes = rotula(img, LARGURA_MIN, ALTURA_MIN, N_PIXELS_MIN)
+    n_componentes = len(componentes)
     print('Tempo: %f' % (timeit.default_timer() - start_time))
-    # print('%d componentes detectados.' % n_componentes)
+    print('%d componentes detectados.' % n_componentes)
 
     # Mostra os objetos encontrados.
-    # for c in componentes:
-    #     cv2.rectangle(img_out, (c['L'], c['T']), (c['R'], c['B']), (0, 0, 1))
+    for c in componentes:
+        cv2.rectangle(img_out, (c['L'], c['T']), (c['R'], c['B']), (0, 0, 1))
 
     cv2.imshow('02 - out', img_out)
     cv2.imwrite('02 - out.png', img_out * 255)
