@@ -19,7 +19,7 @@ NEGATIVO = False
 THRESHOLD = 0.7
 ALTURA_MIN = 22
 LARGURA_MIN = 31
-N_PIXELS_MIN = 450
+N_PIXELS_MIN = 400
 
 
 # ===============================================================================
