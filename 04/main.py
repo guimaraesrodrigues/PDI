@@ -10,7 +10,7 @@ import cv2
 
 # ===============================================================================
 
-INPUT_IMAGE = '150.bmp'
+INPUT_IMAGE = '205.bmp'
 
 # TODO: ajuste estes parâmetros!
 NEGATIVO = False
@@ -31,8 +31,15 @@ def main():
 
     # cv2.imwrite('01 - binarizada.png', img * 255)
     img = pre_process(img)
-
     show_img(img)
+    img = labeling(img)
+
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            if img[i][j] != 0.0:
+                print(img[i][j])
+    # show_img(img)
+
     # cv2.imshow('img', img)
     # cv2.imwrite('02 - out.png', img_out * 255)
 
@@ -46,9 +53,22 @@ def pre_process(img):
 
     kernel = np.ones((5, 5), np.uint8)
 
-    erosion = cv2.erode(img, kernel, iterations=1)
+    img = cv2.erode(img, kernel, iterations=1)
+    img = cv2.dilate(img, kernel, iterations=1)
 
-    return cv2.dilate(erosion, kernel, iterations=1)
+    return img
+
+
+def labeling(img):
+    label = 2
+
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            if img[i][j] == 1.0:
+                cv2.floodFill(img, None, (j, i), label)
+                label += 1
+
+    return img
 
 
 def open_img(file_name):
