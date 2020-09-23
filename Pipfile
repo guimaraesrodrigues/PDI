@@ -6,6 +6,8 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
+opencv-python = "*"
+matplotlib = "*"
 
 [requires]
-python_version = "3.6"
+#python_version = "3.6"

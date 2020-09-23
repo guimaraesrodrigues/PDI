@@ -1,7 +1,7 @@
 import cv2 as cv2
 import numpy as np
 import math
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 
 TAM_JANELA = 30
 SOMA_MAX = math.pow(TAM_JANELA * 2 + 1, 2) * 255
@@ -14,7 +14,7 @@ SOMA_MAX = math.pow(TAM_JANELA * 2 + 1, 2) * 255
 
 
 def is_out_of_bound(img, i, j, tam):
-    return (i + tam> img.shape[0] or i - tam < 0) or (j + tam> img.shape[1] or j - tam < 0)
+    return (i + tam > img.shape[0] or i - tam < 0) or (j + tam> img.shape[1] or j - tam < 0)
 
 
 def define_peso(img, img_fundo, img_objeto):
@@ -24,7 +24,7 @@ def define_peso(img, img_fundo, img_objeto):
 
     for linha in range(img.shape[0]):
         for coluna in range(img.shape[1]):
-            print ("linha: ", linha, " coluna: ", coluna)
+            # print ("linha: ", linha, " coluna: ", coluna)
             if img[linha][coluna] == 0:
                 img_final[linha][coluna] = img_fundo[linha][coluna]
 
@@ -62,9 +62,9 @@ novo_fundo = cv2.resize(novo_fundo, (objeto.shape[1], objeto.shape[0]), interpol
 
 imgHSV = cv2.cvtColor(objeto, cv2.COLOR_BGR2HSV)
 
-lower_green = np.array([45,0,40])
-upper_green = np.array([75,255,255])
-upper_green2 = np.array([75,255,90])
+lower_green = np.array([45, 0, 40])
+upper_green = np.array([75, 255, 255])
+upper_green2 = np.array([75, 255, 90])
 
 mask = cv2.inRange(imgHSV, lower_green, upper_green)
 mask = cv2.bitwise_not(mask)
